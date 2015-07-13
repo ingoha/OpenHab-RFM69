@@ -10,6 +10,7 @@ http://www.instructables.com/id/Uber-Home-Automation/
 ## Protocol
 Messages are 16 bytes long and follow this structure:
 | NodeID (short, 2 bytes) | SensorID (short, 2 bytes) | uptime (long, 4 bytes) | sensor data (float, 4 bytes) | battery (float, 4 bytes) |
+| -- | -- | -- | -- | -- |
 
 Gateway is taken from https://github.com/etrombly/gateway:
 
