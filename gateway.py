@@ -119,17 +119,16 @@ class Gateway(object):
             writeQ.put(message)
         
     def processPacket(self, packet):
-        message = Message(packet)
+		message = Message(packet)
               
 		print "Message from node %d, sensorID %d, uptime %u, data %e, battery %e" % (message.nodeID, message.sensorID, message.uptime, message.data, message.battery);        
 
-        if buff:
-		# send sensor data
-        self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/data" % (message.nodeID, message.sensorID), data)
+        # send sensor data
+		self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/data" % (message.nodeID, message.sensorID), message.data)
 		# send uptime
-        self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/uptime" % (message.nodeID, message.sensorID), uptime)
+		self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/uptime" % (message.nodeID, message.sensorID), message.uptime)
 		# send battery state
-        self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/battery" % (message.nodeID, message.sensorID), battery)
+		self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/battery" % (message.nodeID, message.sensorID), message.battery)
     
     def sendMessage(self, message):
         if not self.radio.sendWithRetry(message.nodeID, message.message, 5, 30):
