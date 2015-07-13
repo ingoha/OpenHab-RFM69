@@ -7,7 +7,7 @@ Original File: UberSensor.ino
 This sketch is for a wired Arduino w/ RFM69 wireless transceiver
 Sends sensor data (gas/smoke, flame, PIR, noise, temp/humidity) back
 to gateway.  See OpenHAB configuration file.
-1) Update encryption string "ENCRYPTKEY" and network id
+1) Update encryption string "ENCRYPTKEY" and network id, node id and frequency
 2) pick sensors to enable
 */
 
@@ -26,12 +26,19 @@ device ID
 // Sensors (device ids)
 // uncomment to enable
 
-#define SENSOR_GAS 2
-#define SENSOR_FLAME 3
-#define SENSOR_PIR 4
-#define SENSOR_SOUND 5
-#define SENSOR_TEMP_HUM 6
-#define SENSOR_LIGHT 7
+//#define SENSOR_GAS 2
+//#define SENSOR_FLAME 3
+//#define SENSOR_PIR 4
+//#define SENSOR_SOUND 5
+//#define SENSOR_TEMP_HUM 6
+//#define SENSOR_LIGHT 7
+
+// 2 = 1222 = smoke or not
+// 3 = 1232 = flame detected or not
+// 4 = 1242 = human motion present or not
+// 5 = 1252 = barking or not
+// IH: OMG...
+// 6 = 1262, 1263 = temperature, humidity
 
 
 //RFM69  --------------------------------------------------------------------------------------------------
@@ -44,7 +51,7 @@ device ID
 //#define FREQUENCY   RF69_433MHZ
 #define FREQUENCY   RF69_868MHZ
 //#define FREQUENCY     RF69_915MHZ
-#define ENCRYPTKEY    "4hFcR93F5jw7eEWk" //exactly the same 16 characters/bytes on all nodes!
+#define ENCRYPTKEY    "ENCRYPTKEY" //exactly the same 16 characters/bytes on all nodes!
 //#define IS_RFM69HW    //uncomment only for RFM69HW! Leave out if you have RFM69W!
 #define ACK_TIME      30 // max # of ms to wait for an ack
 #define LED           13  // Arduino pro mini has LED on D13 (https://www.arduino.cc/en/Main/ArduinoBoardProMini)
@@ -69,48 +76,54 @@ RFM69 radio;
 
 //end RFM69 ------------------------------------------
 
-
 // gas sensor================================================
+#ifdef SENSOR_GAS
 int GasSmokeAnalogPin = 0;      // potentiometer wiper (middle terminal) connected to analog pin 
 int gas_sensor = -500;           // gas sensor value, current
 int gas_sensor_previous = -500;  //sensor value previously sent via RFM
+#endif
 
 //temperature / humidity  =====================================
+#ifdef SENSOR_TEMP_HUM
 #include "dht11.h"
 #define DHTPIN 7     			// digital pin we're connected to
 // Initialize DHT sensor for normal 16mhz Arduino
 dht11 dht;
+#endif
 
 // flame sensor ==============================================
+#ifdef SENSOR_FLAME
 int flameAnalogInput = A1;
 int flame_status = 0;
 int flameValue = -50;			      //analog value of current flame sensor
 int flameValue_previous = -50;  //value previously sent via RFM
+#endif
 
 // Light sensor ===============================================
+#ifdef SENSOR_LIGHT
 int lightAnalogInput = A2;    //analog input for photo resistor
 int lightValue = -50;
 int lightValue_previous = -50;
+#endif
 
 // PIR sensor ================================================
+#ifdef SENSOR_PIR
 int PirInput = 5;
 int PIR_status = 0;
 int PIR_reading = 0;
 int PIR_reading_previous = 0;
+#endif
 
 
 // sound sensor ==============================================
+#ifdef SENSOR_SOUND
 //sound sensor digital input pin
 int soundInput = 6;
 int sound_status = 0;
 int sound_reading = 0;  //reading =1 mean no noise, 0=noise
 int sound_reading_previous = 0;
+#endif
 
-// 2 = 1222 = smoke or not
-// 3 = 1232 = flame detected or not
-// 4 = 1242 = human motion present or not
-// 5 = 1252 = barking or not
-// 6 = 1262, 1263 = temperature, humidity
 
 // timings
 unsigned long gas_time;			//sensor read time
@@ -144,11 +157,14 @@ void setup()
   
   
   //temperature / humidity sensor
+#ifdef SENSOR_TEMP_HUM
   dht.attach(DHTPIN);
+#endif
   
   //sound/noise
+#ifdef SENSOR_SOUND
   pinMode(soundInput, INPUT);
-
+#endif
 
   //initialize times
   gas_time = millis();
@@ -158,7 +174,9 @@ void setup()
   temperature_time = millis();
  
   //PIR sensor
+#ifdef SENSOR_PIR
   pinMode(PirInput, INPUT);
+#endif
 }
 
 void loop()
@@ -171,7 +189,7 @@ void loop()
   //read gas sensor
   // don't read analog pins too often (<1Hz), else caps never get to charge.
   //112 to 120 = normal, 400 = high
- 
+ #ifdef SENSOR_GAS
   time_passed = millis() - gas_time;
   //take care of millis roll over.  In case of roll over
   //if roll over, send next value again 
@@ -207,7 +225,8 @@ void loop()
       Serial.println(gas_sensor);
     }//end if send RFM
   }//end if time_passed >
-    
+#endif
+
   //===================================================================
   
   //delay(100);
@@ -215,6 +234,7 @@ void loop()
   //===================================================================
   //device #3
   //flame
+#ifdef SENSOR_FLAME
 
   time_passed = millis() - flame_time;
   if (time_passed < 0)
@@ -264,11 +284,13 @@ void loop()
     }
     }//end debug text
   }// end if millis time_passed >
+#endif
 
  //===================================================================
   //device #4
   //PIR
-  
+#ifdef SENSOR_PIR
+
   //1 mean presence detected?
   PIR_reading = digitalRead(PirInput);
   //if (PIR_reading == 1)
@@ -288,13 +310,13 @@ void loop()
                 Serial.println("PIR detectedEDED RFM");
                 delay(2000);
     }
-  
+#endif  
   
  //===================================================================
   //device #5
   //sound
  
-
+#ifdef SENSOR_SOUND
   //soundValue = analogRead(soundAnalogInput);
   //Serial.print("sound analog = ");
   //Serial.print(soundValue);
@@ -345,10 +367,12 @@ void loop()
   */
 
   //delay(100);
+#endif
 
   //===================================================================
   //device #6
   //temperature / humidity
+#ifdef SENSOR_TEMP_HUM
   time_passed = millis() - temperature_time;
   if (time_passed < 0)
   {
@@ -384,11 +408,13 @@ void loop()
         delay(1000);
 	
   }
+
+#endif
   //===================================================================
   //===================================================================
   //device #7
   //light
-
+#ifdef SENSOR_LIGHT
   time_passed = millis() - light_time;
   if (time_passed < 0)
   {
@@ -424,7 +450,7 @@ void loop()
     //analog value:  usually 1023 for no fire, lower for fire.
  
   }// end if millis time_passed >
-  
+  #endif
 }//end loop
 
 
