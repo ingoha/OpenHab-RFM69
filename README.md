@@ -7,6 +7,10 @@ I'll put up some youtube videos and better explainations later.  Hopefully, you 
 
 http://www.instructables.com/id/Uber-Home-Automation/
 
+## Protocol
+Messages are 16 bytes long and follow this structure:
+|NodeID (short, 2 bytes)|SensorID (short, 2 bytes)|uptime (long, 4 bytes) |sensor data (float, 4 bytes)|battery (float, 4 bytes)|
+
 Gateway is taken from https://github.com/etrombly/gateway:
 
 This is a gateway script to communicate between RFM69 nodes and an MQTT broker. Ported from https://github.com/computourist/RFM69-MQTT-client to python.
