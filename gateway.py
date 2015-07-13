@@ -19,26 +19,25 @@ class Message(object):
     def __init__(self, message = None):
         self.nodeID = 0
         self.sensorID = 0
-        self.var1 = 0L
-        self.var2 = 0.0
-        self.var3 = 0.0
+        self.uptime = 0L
+        self.data = 0.0
+        self.battery = 0.0
         self.s = struct.Struct('hhLff')
         self.message = message
         if message:
             self.getMessage()
     
-    def setMessage(self, nodeID = None, sensorID = None, var1 = 0, var2 = 0.0, var3 = 0.0):
+    def setMessage(self, nodeID = None, sensorID = None, uptime = 0, data = 0.0, battery = 0.0):
         if nodeID:
-            self.message = self.s.pack(nodeID, sensorID, var1, var2, var3)
+            self.message = self.s.pack(nodeID, sensorID, uptime, data, battery)
         else:
-            self.message = self.s.pack(self.nodeID, self.sensorID, self.var1, self.var2, self.var3)
+            self.message = self.s.pack(self.nodeID, self.sensorID, self.uptime, self.data, self.battery)
         self.getMessage()
         
     def getMessage(self):
-	#print len(buffer(self.message))
-	#print struct.calcsize('hhLff')
+
         try:
-            self.nodeID, self.sensorID, self.var1, self.var2, self.var3 = \
+            self.nodeID, self.sensorID, self.uptime, self.data, self.battery = \
                self.s.unpack_from(buffer(self.message))
         except:
             print "could not extract message"
@@ -121,35 +120,16 @@ class Gateway(object):
         
     def processPacket(self, packet):
         message = Message(packet)
-        buff = None
-        
-        #statMess = message.devID in [5, 6, 8] + range(16, 31)
-        #realMess = message.devID in [4] + range(48, 63) and message.cmd == 1
-        #intMess = message.devID in [0, 1, 2, 7] + range(16, 31)
-        #strMess = message.devID in [3, 72]
-        
-        #if intMess:
-        #    buff = "%d" % (message.intVal, )
-        #if realMess:
-        #    buff = "%.2d" % (message.fltVal, )
-        #if statMess:
-        #    if message.intVal == 1:
-        #        buff = "ON"
-        #    elif message.intVal == 0:
-        #        buff = "OFF"
-        #if strMess:
-        #    buff = message.payload
-        #if message.devID in range(40, 47):
-        #    buff = "Binary input activated"
-        #elif message.devID == 92:
-        #    buff = "NODE %d invalid device %d" % (message.nodeID, message.intVal)
-        #elif message.devID == 99:
-        #    buff = "NODE %d WAKEUP" % (message.nodeID, )
-	
-	print "Message from node %d, sensorID %d, var1 %u, var2 %e, var3 %e" % (message.nodeID, message.sensorID, message.var1, message.var2, message.var3);        
+              
+		print "Message from node %d, sensorID %d, uptime %u, data %e, battery %e" % (message.nodeID, message.sensorID, message.uptime, message.data, message.battery);        
 
         if buff:
-            self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d" % (message.nodeID, message.sensorID), var1)
+		# send sensor data
+        self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/data" % (message.nodeID, message.sensorID), data)
+		# send uptime
+        self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/uptime" % (message.nodeID, message.sensorID), uptime)
+		# send battery state
+        self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/battery" % (message.nodeID, message.sensorID), battery)
     
     def sendMessage(self, message):
         if not self.radio.sendWithRetry(message.nodeID, message.message, 5, 30):
