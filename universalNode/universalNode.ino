@@ -12,52 +12,11 @@ to gateway.  See OpenHAB configuration file.
 */
 
 
-/* sensor
-node = 12
-device ID
-2 = 1222 = smoke or not
-3 = 1232 = flame detected or not
-4 = 1242 = human motion present or not
-5 = 1252 = barking or not
-6 = 1262, 1263 = temperature, humidity
+#include "config.h"
 
-*/
-
-// Sensors (device ids)
-// uncomment to enable
-
-//#define SENSOR_GAS 2
-//#define SENSOR_FLAME 3
-//#define SENSOR_PIR 4
-//#define SENSOR_SOUND 5
-//#define SENSOR_TEMP_HUM 6
-//#define SENSOR_LIGHT 7
-
-// 2 = 1222 = smoke or not
-// 3 = 1232 = flame detected or not
-// 4 = 1242 = human motion present or not
-// 5 = 1252 = barking or not
-// IH: OMG...
-// 6 = 1262, 1263 = temperature, humidity
-
-
-//RFM69  --------------------------------------------------------------------------------------------------
+ 
 #include <RFM69.h>
 #include <SPI.h>
-#define NODEID        12    //unique for each node on same network
-#define NETWORKID     27  //the same on all nodes that talk to each other
-#define GATEWAYID     1
-//Match frequency to the hardware version of the radio on your Moteino (uncomment one):
-//#define FREQUENCY   RF69_433MHZ
-#define FREQUENCY   RF69_868MHZ
-//#define FREQUENCY     RF69_915MHZ
-#define ENCRYPTKEY    "ENCRYPTKEY" //exactly the same 16 characters/bytes on all nodes!
-//#define IS_RFM69HW    //uncomment only for RFM69HW! Leave out if you have RFM69W!
-#define ACK_TIME      30 // max # of ms to wait for an ack
-#define LED           13  // Arduino pro mini has LED on D13 (https://www.arduino.cc/en/Main/ArduinoBoardProMini)
-#define SERIAL_BAUD   9600  //must be 9600 for GPS, use whatever if no GPS
-
-boolean debug = 0;
 
 //struct for wireless data transmission
 typedef struct {		
@@ -73,8 +32,6 @@ char buff[20];
 byte sendSize=0;
 boolean requestACK = false;
 RFM69 radio;
-
-//end RFM69 ------------------------------------------
 
 // gas sensor================================================
 #ifdef SENSOR_GAS
@@ -141,9 +98,8 @@ unsigned long light_time_send;
 
 void setup()
 {
-  Serial.begin(9600);          //  setup serial
+  Serial.begin(SERIAL_BAUD);          //  setup serial
 
-  //RFM69-------------------------------------------
   radio.initialize(FREQUENCY,NODEID,NETWORKID);
   #ifdef IS_RFM69HW
     radio.setHighPower(); //uncomment only for RFM69HW!
@@ -153,8 +109,6 @@ void setup()
   sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY==RF69_433MHZ ? 433 : FREQUENCY==RF69_868MHZ ? 868 : 915);
   Serial.println(buff);
   theData.nodeID = NODEID;  //this node id should be the same for all devices in this node
-  //end RFM--------------------------------------------
-  
   
   //temperature / humidity sensor
 #ifdef SENSOR_TEMP_HUM
@@ -215,7 +169,7 @@ void loop()
     {
       gas_time_send = millis();  //update gas_time_send with when sensor value last transmitted
       
-      theData.deviceID = 2;
+      theData.deviceID = SENSOR_GAS;
       theData.var1_usl = millis();
       theData.var2_float = gas_sensor;
       theData.var3_float = gas_sensor + 100;		//null value;
@@ -253,7 +207,7 @@ void loop()
     if ((flameValue < (flameValue_previous - 20)) || ((flameValue > (flameValue_previous + 20)) || (705000 < (millis() - flame_time_send))) )
     {
       flame_time_send = millis();  //update gas_time_send with when sensor value last transmitted
-      theData.deviceID = 3;
+      theData.deviceID = SENSOR_FLAME;
       theData.var1_usl = millis();
       theData.var2_float = flameValue;
       theData.var3_float = flameValue + 100;
@@ -302,7 +256,7 @@ void loop()
 	if ((PIR_reading == 1) && ( ((millis() - pir_time)>60000)||( (millis() - pir_time)< 0)) ) //meaning there was sound
 	{
 		pir_time = millis();  //update gas_time_send with when sensor value last transmitted
-		theData.deviceID = 4;
+		theData.deviceID = SENSOR_PIR;
 		theData.var1_usl = millis();
 		theData.var2_float = 1111;
 		theData.var3_float = 1112;		//null value;
@@ -329,7 +283,7 @@ void loop()
 	{
 		sound_time = millis();  //update gas_time_send with when sensor value last transmitted
 		
-		theData.deviceID = 5;
+		theData.deviceID = SENSOR_SOUND;
 		theData.var1_usl = millis();
 		theData.var2_float = 2222;
 		theData.var3_float = 2223;		//null value;
@@ -400,11 +354,17 @@ void loop()
     temperature_time = millis();
 
 	//send data
-	theData.deviceID = 6;
+	theData.deviceID = SENSOR_TEMP_HUM;
 	theData.var1_usl = millis();
-	theData.var2_float = f;
-	theData.var3_float = h;
+	theData.var2_float = t;
+//	theData.var3_float = h;
 	radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+	theData.deviceID = SENSOR_HUMIDITY;
+	theData.var1_usl = millis();
+	theData.var2_float = h;
+//	theData.var3_float = h;
+	radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+
         delay(1000);
 	
   }
@@ -412,7 +372,7 @@ void loop()
 #endif
   //===================================================================
   //===================================================================
-  //device #7
+  //device #8
   //light
 #ifdef SENSOR_LIGHT
   time_passed = millis() - light_time;
@@ -431,7 +391,7 @@ void loop()
     if ((lightValue < (lightValue_previous - 50)) || ((lightValue > (lightValue_previous + 100)) || (705000 < (millis() - light_time_send))) )
     {
       light_time_send = millis();  //update gas_time_send with when sensor value last transmitted
-      theData.deviceID = 7;
+      theData.deviceID = SENSOR_LIGHT;
       theData.var1_usl = millis();
       theData.var2_float = lightValue;
       theData.var3_float = lightValue + 20;
