@@ -31,6 +31,14 @@ Payload theData;
 char buff[20];
 byte sendSize=0;
 boolean requestACK = false;
+/*
+ * RFM69 Pinout to arduino:
+ *   MOSI = 11
+ *   MISO = 12
+ *   SCK = 13
+ *   SS = 10
+ */
+
 RFM69 radio;
 
 // gas sensor================================================
@@ -44,7 +52,6 @@ int gas_sensor_previous = -500;  //sensor value previously sent via RFM
 #ifdef SENSOR_TEMP_HUM
 #include "dht11.h"
 #define DHTPIN 7     			// digital pin we're connected to
-// Initialize DHT sensor for normal 16mhz Arduino
 dht11 dht;
 #endif
 
