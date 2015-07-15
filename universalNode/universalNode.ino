@@ -351,13 +351,11 @@ void loop()
     float h = (float)dht.humidity;
     // Read temperature as Celsius
     float t = (float)dht.temperature;
-    // Read temperature as Fahrenheit
-    float f = dht.fahrenheit();
     
     Serial.print("Humidity=");
     Serial.print(h);
     Serial.print("   Temp=");
-    Serial.println(f);
+    Serial.println(t);
     temperature_time = millis();
 
 	//send data
