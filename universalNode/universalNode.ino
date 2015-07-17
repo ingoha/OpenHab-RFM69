@@ -14,12 +14,12 @@ to gateway.  See OpenHAB configuration file.
 
 #include "config.h"
 
- 
+
 #include <RFM69.h>
 #include <SPI.h>
 
 //struct for wireless data transmission
-typedef struct {		
+typedef struct {
   int       nodeID; 		//node ID (1xx, 2xx, 3xx);  1xx = basement, 2xx = main floor, 3xx = outside
   int       deviceID;		//sensor ID (2, 3, 4, 5)
   unsigned long   var1_usl; 		//uptime in ms
@@ -29,7 +29,7 @@ typedef struct {
 Payload theData;
 
 char buff[20];
-byte sendSize=0;
+byte sendSize = 0;
 boolean requestACK = false;
 /*
  * RFM69 Pinout to arduino:
@@ -43,16 +43,38 @@ RFM69 radio;
 
 // gas sensor================================================
 #ifdef SENSOR_GAS
-int GasSmokeAnalogPin = 0;      // potentiometer wiper (middle terminal) connected to analog pin 
+int GasSmokeAnalogPin = 0;      // potentiometer wiper (middle terminal) connected to analog pin
 int gas_sensor = -500;           // gas sensor value, current
 int gas_sensor_previous = -500;  //sensor value previously sent via RFM
 #endif
 
 //temperature / humidity  =====================================
 #ifdef SENSOR_TEMP_HUM
-#include "dht11.h"
+#include "DHT.h"
 #define DHTPIN 7     			// digital pin we're connected to
-dht11 dht;
+
+// Uncomment whatever type you're using!
+#define DHTTYPE DHT11   // DHT 11
+//#define DHTTYPE DHT22   // DHT 22  (AM2302)
+//#define DHTTYPE DHT21   // DHT 21 (AM2301)
+
+// Connect pin 1 (on the left) of the sensor to +5V
+// NOTE: If using a board with 3.3V logic like an Arduino Due connect pin 1
+// to 3.3V instead of 5V!
+// Connect pin 2 of the sensor to whatever your DHTPIN is
+// Connect pin 4 (on the right) of the sensor to GROUND
+// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+
+// Initialize DHT sensor for 8mhz Arduino
+DHT dht(DHTPIN, DHTTYPE, 2);
+// NOTE: For working with a faster chip, like an Arduino Due or Teensy, you
+// might need to increase the threshold for cycle counts considered a 1 or 0.
+// You can do this by passing a 3rd parameter for this threshold.  It's a bit
+// of fiddling to find the right value, but in general the faster the CPU the
+// higher the value.  The default for a 16mhz AVR is a value of 6.  For an
+// Arduino Due that runs at 84mhz a value of 30 works.
+// Example to initialize DHT sensor for Arduino Due:
+//DHT dht(DHTPIN, DHTTYPE, 30);
 #endif
 
 // flame sensor ==============================================
@@ -107,21 +129,21 @@ void setup()
 {
   Serial.begin(SERIAL_BAUD);          //  setup serial
 
-  radio.initialize(FREQUENCY,NODEID,NETWORKID);
-  #ifdef IS_RFM69HW
-    radio.setHighPower(); //uncomment only for RFM69HW!
-  #endif
+  radio.initialize(FREQUENCY, NODEID, NETWORKID);
+#ifdef IS_RFM69HW
+  radio.setHighPower(); //uncomment only for RFM69HW!
+#endif
   radio.encrypt(ENCRYPTKEY);
   char buff[50];
-  sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY==RF69_433MHZ ? 433 : FREQUENCY==RF69_868MHZ ? 868 : 915);
+  sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
   Serial.println(buff);
   theData.nodeID = NODEID;  //this node id should be the same for all devices in this node
-  
+
   //temperature / humidity sensor
 #ifdef SENSOR_TEMP_HUM
-  dht.attach(DHTPIN);
+  dht.begin();
 #endif
-  
+
   //sound/noise
 #ifdef SENSOR_SOUND
   pinMode(soundInput, INPUT);
@@ -133,7 +155,7 @@ void setup()
   pir_time = millis();
   sound_time = millis();
   temperature_time = millis();
- 
+
   //PIR sensor
 #ifdef SENSOR_PIR
   pinMode(PirInput, INPUT);
@@ -142,40 +164,40 @@ void setup()
 
 void loop()
 {
-  
+
   unsigned long time_passed = 0;
-  
+
   //===================================================================
   //device #2
   //read gas sensor
   // don't read analog pins too often (<1Hz), else caps never get to charge.
   //112 to 120 = normal, 400 = high
- #ifdef SENSOR_GAS
+#ifdef SENSOR_GAS
   time_passed = millis() - gas_time;
   //take care of millis roll over.  In case of roll over
-  //if roll over, send next value again 
+  //if roll over, send next value again
   if (time_passed < 0)
   {
-	gas_time = millis();
-	gas_time_send = -700000;
+    gas_time = millis();
+    gas_time_send = -700000;
   }
-  
+
   //Serial.print("gas time passed = ");
   //Serial.println(time_passed);
   if (time_passed > 5000)		//read gas sensor analog input every X seconds
   {
     gas_time = millis();		//update gas_time w/ when sensor last read
     gas_sensor = analogRead(GasSmokeAnalogPin);    // read the input pin
-    if (debug){
+    if (debug) {
       Serial.print("Gas = ");
       Serial.println(gas_sensor);
     }
-	
+
     //send data if gas detected, or if big changes relative to value last sent, or if it's been a while
     if ((gas_sensor < (gas_sensor_previous - 70)) || ((gas_sensor > (gas_sensor_previous + 70)) || (700000 < (millis() - gas_time_send))))
     {
       gas_time_send = millis();  //update gas_time_send with when sensor value last transmitted
-      
+
       theData.deviceID = SENSOR_GAS;
       theData.var1_usl = millis();
       theData.var2_float = gas_sensor;
@@ -189,9 +211,9 @@ void loop()
 #endif
 
   //===================================================================
-  
+
   //delay(100);
-  
+
   //===================================================================
   //device #3
   //flame
@@ -220,34 +242,34 @@ void loop()
       theData.var3_float = flameValue + 100;
       radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
       flameValue_previous = flameValue;
-      
+
       Serial.print("flame detected rfm");
       Serial.println(flameValue);
       delay(2000);
-    }	
-	
-	
+    }
+
+
     //start debug code
-    if (debug){   
-    Serial.print("flame analog = ");
-    Serial.print(flameValue);
-    
-    //analog value:  usually 1023 for no fire, lower for fire.
-    if (flameValue > 1000)
-    {
-      flame_status = 0;
-      Serial.println("   no fire");
-    }
-    else
-    {
-      flame_status = 1;
-      Serial.println("    fire!!!");
-    }
+    if (debug) {
+      Serial.print("flame analog = ");
+      Serial.print(flameValue);
+
+      //analog value:  usually 1023 for no fire, lower for fire.
+      if (flameValue > 1000)
+      {
+        flame_status = 0;
+        Serial.println("   no fire");
+      }
+      else
+      {
+        flame_status = 1;
+        Serial.println("    fire!!!");
+      }
     }//end debug text
   }// end if millis time_passed >
 #endif
 
- //===================================================================
+  //===================================================================
   //device #4
   //PIR
 #ifdef SENSOR_PIR
@@ -260,48 +282,48 @@ void loop()
   //Serial.println("PIR = 0");
   //send PIR sensor value only if presence is detected and the last time
   //presence was detected is over x miniutes ago.  Avoid excessive RFM sends
-	if ((PIR_reading == 1) && ( ((millis() - pir_time)>60000)||( (millis() - pir_time)< 0)) ) //meaning there was sound
-	{
-		pir_time = millis();  //update gas_time_send with when sensor value last transmitted
-		theData.deviceID = SENSOR_PIR;
-		theData.var1_usl = millis();
-		theData.var2_float = 1111;
-		theData.var3_float = 1112;		//null value;
-		radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
-                Serial.println("PIR detectedEDED RFM");
-                delay(2000);
-    }
-#endif  
-  
- //===================================================================
+  if ((PIR_reading == 1) && ( ((millis() - pir_time) > 60000) || ( (millis() - pir_time) < 0)) ) //meaning there was sound
+  {
+    pir_time = millis();  //update gas_time_send with when sensor value last transmitted
+    theData.deviceID = SENSOR_PIR;
+    theData.var1_usl = millis();
+    theData.var2_float = 1111;
+    theData.var3_float = 1112;		//null value;
+    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    Serial.println("PIR detectedEDED RFM");
+    delay(2000);
+  }
+#endif
+
+  //===================================================================
   //device #5
   //sound
- 
+
 #ifdef SENSOR_SOUND
   //soundValue = analogRead(soundAnalogInput);
   //Serial.print("sound analog = ");
   //Serial.print(soundValue);
-  
+
   // 1 = no noise, 0 = noise!!
   sound_reading = digitalRead(soundInput);
   //Serial.print("sound value = ");
   //Serial.println(sound_reading);
-	if ((sound_reading == 0) && ( ((millis() - sound_time)>20000)||( (millis() - sound_time)< 0)) ) //meaning there was sound
-	{
-		sound_time = millis();  //update gas_time_send with when sensor value last transmitted
-		
-		theData.deviceID = SENSOR_SOUND;
-		theData.var1_usl = millis();
-		theData.var2_float = 2222;
-		theData.var3_float = 2223;		//null value;
-		radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
-                Serial.print("sound noise detected RFM ");
-		sound_reading_previous = sound_reading;
-	}
+  if ((sound_reading == 0) && ( ((millis() - sound_time) > 20000) || ( (millis() - sound_time) < 0)) ) //meaning there was sound
+  {
+    sound_time = millis();  //update gas_time_send with when sensor value last transmitted
+
+    theData.deviceID = SENSOR_SOUND;
+    theData.var1_usl = millis();
+    theData.var2_float = 2222;
+    theData.var3_float = 2223;		//null value;
+    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    Serial.print("sound noise detected RFM ");
+    sound_reading_previous = sound_reading;
+  }
 
 
   /*
- if (sound_reading == 1)
+  if (sound_reading == 1)
    sound_status = 0;
     else
    sound_status = 1;
@@ -311,8 +333,8 @@ void loop()
     Serial.println(sound_reading);
   }
   */
-  
-  
+
+
   /*
   // analog value lower = louder
   if (soundValue < 200)
@@ -337,41 +359,43 @@ void loop()
   time_passed = millis() - temperature_time;
   if (time_passed < 0)
   {
-	temperature_time = millis();
+    temperature_time = millis();
   }
-  
+
   if (time_passed > 360000)
   {
-    int chk = dht.read();
+    float h = dht.readHumidity();
+    // Read temperature as Celsius
+    float t = dht.readTemperature();
+
     // Check if any reads failed and exit early (to try again).
-    if (chk != 0) {
+    if (isnan(h) || isnan(t)) {
       Serial.println("Failed to read from DHT sensor!");
       return;
     }
-    float h = (float)dht.humidity;
-    // Read temperature as Celsius
-    float t = (float)dht.temperature;
-    
+
     Serial.print("Humidity=");
     Serial.print(h);
     Serial.print("   Temp=");
     Serial.println(t);
+
+
     temperature_time = millis();
 
-	//send data
-	theData.deviceID = SENSOR_TEMP_HUM;
-	theData.var1_usl = millis();
-	theData.var2_float = t;
-//	theData.var3_float = h;
-	radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
-	theData.deviceID = SENSOR_HUMIDITY;
-	theData.var1_usl = millis();
-	theData.var2_float = h;
-//	theData.var3_float = h;
-	radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    //send data
+    theData.deviceID = SENSOR_TEMP_HUM;
+    theData.var1_usl = millis();
+    theData.var2_float = t;
+    //	theData.var3_float = h;
+    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    theData.deviceID = SENSOR_HUMIDITY;
+    theData.var1_usl = millis();
+    theData.var2_float = h;
+    //	theData.var3_float = h;
+    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
 
-        delay(1000);
-	
+    delay(1000);
+
   }
 
 #endif
@@ -404,8 +428,8 @@ void loop()
       lightValue_previous = lightValue;
       Serial.print("light RFM =");
       Serial.println(lightValue);
-    }	
-	
+    }
+
     //start debug code
     if (debug)
     {
@@ -413,9 +437,9 @@ void loop()
       Serial.println(lightValue);
     }
     //analog value:  usually 1023 for no fire, lower for fire.
- 
+
   }// end if millis time_passed >
-  #endif
+#endif
 }//end loop
 
 
