@@ -142,6 +142,7 @@ void setup()
   //temperature / humidity sensor
 #ifdef SENSOR_TEMP_HUM
   dht.begin();
+  Serial.println("DHT sensor enabled.");
 #endif
 
   //sound/noise
@@ -166,6 +167,13 @@ void loop()
 {
 
   unsigned long time_passed = 0;
+
+  // TODO
+  // calculate battery status
+  // and reuse it for all devices
+  
+  // TODO
+  // extract modules for each device
 
   //===================================================================
   //device #2
