@@ -134,6 +134,7 @@ void setup()
   radio.setHighPower(); //uncomment only for RFM69HW!
 #endif
   radio.encrypt(ENCRYPTKEY);
+  radio.sleep();
   char buff[50];
   sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
   Serial.println(buff);
@@ -203,6 +204,7 @@ void loop()
       theData.var2_float = gas_sensor;
       theData.var3_float = gas_sensor + 100;		//null value;
       radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+	  radio.sleep();
       gas_sensor_previous = gas_sensor;
       Serial.print("gas rfm = ");
       Serial.println(gas_sensor);
@@ -241,6 +243,7 @@ void loop()
       theData.var2_float = flameValue;
       theData.var3_float = flameValue + 100;
       radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+	  radio.sleep();
       flameValue_previous = flameValue;
 
       Serial.print("flame detected rfm");
@@ -290,6 +293,7 @@ void loop()
     theData.var2_float = 1111;
     theData.var3_float = 1112;		//null value;
     radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+	radio.sleep();
     Serial.println("PIR detectedEDED RFM");
     delay(2000);
   }
@@ -317,6 +321,7 @@ void loop()
     theData.var2_float = 2222;
     theData.var3_float = 2223;		//null value;
     radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+	radio.sleep();
     Serial.print("sound noise detected RFM ");
     sound_reading_previous = sound_reading;
   }
@@ -393,6 +398,7 @@ void loop()
     theData.var2_float = h;
     //	theData.var3_float = h;
     radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+  	radio.sleep();
 
     delay(1000);
 
@@ -425,6 +431,7 @@ void loop()
       theData.var2_float = lightValue;
       theData.var3_float = lightValue + 20;
       radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+	  radio.sleep();
       lightValue_previous = lightValue;
       Serial.print("light RFM =");
       Serial.println(lightValue);
