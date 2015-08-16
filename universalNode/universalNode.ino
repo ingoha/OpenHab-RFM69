@@ -7,8 +7,6 @@ Original File: UberSensor.ino
 This sketch is for a wired Arduino w/ RFM69 wireless transceiver
 Sends sensor data (gas/smoke, flame, PIR, noise, temp/humidity) back
 to gateway.  See OpenHAB configuration file.
-1) Update encryption string "ENCRYPTKEY" and network id, node id and frequency
-2) pick sensors to enable
 */
 
 
@@ -38,6 +36,8 @@ boolean requestACK = false;
  *   SCK = 13
  *   SS = 10
  */
+ 
+
 
 RFM69 radio;
 
@@ -48,34 +48,6 @@ int gas_sensor = -500;           // gas sensor value, current
 int gas_sensor_previous = -500;  //sensor value previously sent via RFM
 #endif
 
-//temperature / humidity  =====================================
-#ifdef SENSOR_TEMP_HUM
-#include "DHT.h"
-#define DHTPIN 7     			// digital pin we're connected to
-
-// Uncomment whatever type you're using!
-#define DHTTYPE DHT11   // DHT 11
-//#define DHTTYPE DHT22   // DHT 22  (AM2302)
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
-
-// Connect pin 1 (on the left) of the sensor to +5V
-// NOTE: If using a board with 3.3V logic like an Arduino Due connect pin 1
-// to 3.3V instead of 5V!
-// Connect pin 2 of the sensor to whatever your DHTPIN is
-// Connect pin 4 (on the right) of the sensor to GROUND
-// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
-
-// Initialize DHT sensor for 8mhz Arduino
-DHT dht(DHTPIN, DHTTYPE, 2);
-// NOTE: For working with a faster chip, like an Arduino Due or Teensy, you
-// might need to increase the threshold for cycle counts considered a 1 or 0.
-// You can do this by passing a 3rd parameter for this threshold.  It's a bit
-// of fiddling to find the right value, but in general the faster the CPU the
-// higher the value.  The default for a 16mhz AVR is a value of 6.  For an
-// Arduino Due that runs at 84mhz a value of 30 works.
-// Example to initialize DHT sensor for Arduino Due:
-//DHT dht(DHTPIN, DHTTYPE, 30);
-#endif
 
 // flame sensor ==============================================
 #ifdef SENSOR_FLAME
@@ -108,6 +80,21 @@ int soundInput = 6;
 int sound_status = 0;
 int sound_reading = 0;  //reading =1 mean no noise, 0=noise
 int sound_reading_previous = 0;
+#endif
+
+#ifdef SENSOR_TEMP_HUM
+
+// Initialize DHT sensor for 8mhz Arduino
+DHT dht(DHTPIN, DHTTYPE, 2);
+// NOTE: For working with a faster chip, like an Arduino Due or Teensy, you
+// might need to increase the threshold for cycle counts considered a 1 or 0.
+// You can do this by passing a 3rd parameter for this threshold.  It's a bit
+// of fiddling to find the right value, but in general the faster the CPU the
+// higher the value.  The default for a 16mhz AVR is a value of 6.  For an
+// Arduino Due that runs at 84mhz a value of 30 works.
+// Example to initialize DHT sensor for Arduino Due:
+//DHT dht(DHTPIN, DHTTYPE, 30);
+
 #endif
 
 
@@ -375,7 +362,7 @@ void loop()
     temperature_time = millis();
   }
 
-  if (time_passed > 360000)
+  if (time_passed > TEMPERATURE_INTERVAL)
   {
     float h = dht.readHumidity();
     // Read temperature as Celsius
