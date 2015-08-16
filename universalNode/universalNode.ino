@@ -41,6 +41,19 @@ boolean requestACK = false;
 
 RFM69 radio;
 
+// timings
+unsigned long gas_time;			//sensor read time
+unsigned long gas_time_send;	//sensor value transmission time
+unsigned long flame_time;
+unsigned long flame_time_send;
+unsigned long pir_time;
+//unsigned long pir_time_send;
+unsigned long sound_time;
+//unsigned long sound_time_Send;
+unsigned long temperature_time;
+unsigned long light_time;
+unsigned long light_time_send;
+
 // gas sensor================================================
 #ifdef SENSOR_GAS
 int GasSmokeAnalogPin = 0;      // potentiometer wiper (middle terminal) connected to analog pin
@@ -83,7 +96,7 @@ int sound_reading_previous = 0;
 #endif
 
 #ifdef SENSOR_TEMP_HUM
-
+#include "DHT.h"
 // Initialize DHT sensor for 8mhz Arduino
 DHT dht(DHTPIN, DHTTYPE, 2);
 // NOTE: For working with a faster chip, like an Arduino Due or Teensy, you
@@ -134,18 +147,7 @@ void sensorTempHum() {
 #endif
 
 
-// timings
-unsigned long gas_time;			//sensor read time
-unsigned long gas_time_send;	//sensor value transmission time
-unsigned long flame_time;
-unsigned long flame_time_send;
-unsigned long pir_time;
-//unsigned long pir_time_send;
-unsigned long sound_time;
-//unsigned long sound_time_Send;
-unsigned long temperature_time;
-unsigned long light_time;
-unsigned long light_time_send;
+
 
 
 void setup()
