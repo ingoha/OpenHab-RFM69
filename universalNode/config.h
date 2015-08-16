@@ -14,7 +14,7 @@
 //#define SENSOR_FLAME 3
 //#define SENSOR_PIR 4
 //#define SENSOR_SOUND 5
-#define SENSOR_TEMP_HUM 6
+//#define SENSOR_TEMP_HUM 6
 #ifdef SENSOR_TEMP_HUM
   #define SENSOR_HUMIDITY 7
 #endif
@@ -45,7 +45,7 @@
 
 //temperature / humidity  =====================================
 #ifdef SENSOR_TEMP_HUM
-#include "DHT.h"
+
 #define DHTPIN 7     			// digital pin we're connected to
 
 // Uncomment whatever type you're using!
