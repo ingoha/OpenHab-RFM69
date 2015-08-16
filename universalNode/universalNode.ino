@@ -95,6 +95,42 @@ DHT dht(DHTPIN, DHTTYPE, 2);
 // Example to initialize DHT sensor for Arduino Due:
 //DHT dht(DHTPIN, DHTTYPE, 30);
 
+//
+// Handles DHT sensor
+//
+void sensorTempHum() {
+    float h = dht.readHumidity();
+    // Read temperature as Celsius
+    float t = dht.readTemperature();
+
+    // Check if any reads failed and exit early (to try again).
+    if (isnan(h) || isnan(t)) {
+      Serial.println("Failed to read from DHT sensor!");
+      return;
+    }
+
+    Serial.print("Humidity=");
+    Serial.print(h);
+    Serial.print("   Temp=");
+    Serial.println(t);
+
+
+    temperature_time = millis();
+
+    //send data
+    theData.deviceID = SENSOR_TEMP_HUM;
+    theData.var1_usl = millis();
+    theData.var2_float = t;
+    //	theData.var3_float = h;
+    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    theData.deviceID = SENSOR_HUMIDITY;
+    theData.var1_usl = millis();
+    theData.var2_float = h;
+    //	theData.var3_float = h;
+    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    radio.sleep();
+}
+
 #endif
 
 
@@ -364,41 +400,10 @@ void loop()
 
   if (time_passed > TEMPERATURE_INTERVAL)
   {
-    float h = dht.readHumidity();
-    // Read temperature as Celsius
-    float t = dht.readTemperature();
-
-    // Check if any reads failed and exit early (to try again).
-    if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
-      return;
-    }
-
-    Serial.print("Humidity=");
-    Serial.print(h);
-    Serial.print("   Temp=");
-    Serial.println(t);
-
-
-    temperature_time = millis();
-
-    //send data
-    theData.deviceID = SENSOR_TEMP_HUM;
-    theData.var1_usl = millis();
-    theData.var2_float = t;
-    //	theData.var3_float = h;
-    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
-    theData.deviceID = SENSOR_HUMIDITY;
-    theData.var1_usl = millis();
-    theData.var2_float = h;
-    //	theData.var3_float = h;
-    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
-  	radio.sleep();
+    sensorTempHum();
 
     delay(1000);
-
   }
-
 #endif
   //===================================================================
   //===================================================================
