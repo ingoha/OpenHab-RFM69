@@ -135,12 +135,12 @@ void sensorTempHum() {
     theData.var1_usl = millis();
     theData.var2_float = t;
     //	theData.var3_float = h;
-    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
     theData.deviceID = SENSOR_HUMIDITY;
     theData.var1_usl = millis();
     theData.var2_float = h;
     //	theData.var3_float = h;
-    radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
     radio.sleep();
 }
 
