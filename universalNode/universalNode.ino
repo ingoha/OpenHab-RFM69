@@ -405,6 +405,7 @@ void loop()
   Serial.println("Turns skipped: " + temperature_skipped_turns);
   if(temperature_skipped_turns >= TEMPERATURE_TURNS)
   {
+      temperature_skipped_turns = 0;
       sensorTempHum();
   }
   else 
