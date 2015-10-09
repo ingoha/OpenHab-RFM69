@@ -54,6 +54,11 @@ unsigned long temperature_time;
 unsigned long light_time;
 unsigned long light_time_send;
 
+// new: "turn-based" system, 1 turn=8S
+unsigned int temperature_skipped_turns;
+// every 10 minutes = 36000 seconds = 4500 turns
+#define TEMPERATURE_TURNS 4500
+
 // gas sensor================================================
 #ifdef SENSOR_GAS
 int GasSmokeAnalogPin = 0;      // potentiometer wiper (middle terminal) connected to analog pin
@@ -170,6 +175,8 @@ void setup()
 #ifdef SENSOR_TEMP_HUM
   dht.begin();
   Serial.println("DHT sensor enabled.");
+  // send initial reading
+  sensorTempHum();
 #endif
 
   //sound/noise
@@ -395,16 +402,14 @@ void loop()
   //device #6
   //temperature / humidity
 #ifdef SENSOR_TEMP_HUM
-  time_passed = millis() - temperature_time;
-  if (time_passed < 0)
+  Serial.println("Turns skipped: " + temperature_skipped_turns);
+  if(temperature_skipped_turns >= TEMPERATURE_TURNS)
   {
-    temperature_time = millis();
+      sensorTempHum();
   }
-
-  if (time_passed > TEMPERATURE_INTERVAL)
+  else 
   {
-    sensorTempHum();
-
+    temperature_skipped_turns += 1;
   }
 #endif
   //===================================================================
