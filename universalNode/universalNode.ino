@@ -12,7 +12,7 @@ to gateway.  See OpenHAB configuration file.
 
 #include "config.h"
 
-
+#include <LowPower.h>
 #include <RFM69.h>
 #include <SPI.h>
 
@@ -405,7 +405,6 @@ void loop()
   {
     sensorTempHum();
 
-    delay(1000);
   }
 #endif
   //===================================================================
@@ -450,6 +449,8 @@ void loop()
 
   }// end if millis time_passed >
 #endif
+// Enter power down state for 8 s with ADC and BOD module disabled
+    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);  
 }//end loop
 
 
