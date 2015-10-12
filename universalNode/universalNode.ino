@@ -56,8 +56,8 @@ unsigned long light_time_send;
 
 // new: "turn-based" system, 1 turn=8S
 unsigned int temperature_skipped_turns;
-// every 10 minutes = 36000 seconds = 4500 turns
-#define TEMPERATURE_TURNS 4500
+// every 10 minutes = 600 seconds = 75 turns
+#define TEMPERATURE_TURNS 75
 
 // gas sensor================================================
 #ifdef SENSOR_GAS
