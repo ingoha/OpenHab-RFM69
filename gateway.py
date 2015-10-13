@@ -121,7 +121,7 @@ class Gateway(object):
     def processPacket(self, packet):
 		message = Message(packet)
               
-		print "Message from node %d, sensorID %d, uptime %u, data %e, battery %e" % (message.nodeID, message.sensorID, message.uptime, message.data, message.battery);        
+		print time.strftime("[%Y-%m-%d %H:%M] ") + "Message from node %d, sensorID %d, uptime %u, data %e, battery %e" % (message.nodeID, message.sensorID, message.uptime, message.data, message.battery);        
 
         # send sensor data
 		self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/data" % (message.nodeID, message.sensorID), message.data)
