@@ -141,23 +141,32 @@ void sensorTempHum() {
     theData.var2_float = t;
     //	theData.var3_float = h;
     radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    ledFlash();
     theData.deviceID = SENSOR_HUMIDITY;
     theData.var1_usl = millis();
     theData.var2_float = h;
     //	theData.var3_float = h;
     radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    ledFlash();
     radio.sleep();
 }
 
 #endif
 
 
-
+void ledFlash()
+{
+  digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);              // wait for a second
+  digitalWrite(LED, LOW);
+}
 
 
 void setup()
 {
   Serial.begin(SERIAL_BAUD);          //  setup serial
+  
+  pinMode(LED, OUTPUT);
 
   radio.initialize(FREQUENCY, NODEID, NETWORKID);
 #ifdef IS_RFM69HW
@@ -169,12 +178,14 @@ void setup()
   char buff[50];
   sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
   Serial.println(buff);
+  ledFlash();
   theData.nodeID = NODEID;  //this node id should be the same for all devices in this node
 
   //temperature / humidity sensor
 #ifdef SENSOR_TEMP_HUM
   dht.begin();
   Serial.println("DHT sensor enabled.");
+  ledFlash();
   // send initial reading
   sensorTempHum();
 #endif
