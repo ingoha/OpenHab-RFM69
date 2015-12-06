@@ -59,6 +59,15 @@ unsigned int temperature_skipped_turns;
 // every 10 minutes = 600 seconds = 75 turns
 #define TEMPERATURE_TURNS 75
 
+// battery monitor
+// TODO extract constants and move to config
+float vout = 0.0;
+float vin = 0.0;
+float R1 = 1000000.0; // resistance of R1 (1M)
+float R2 = 1000000.0; // resistance of R2 (1M)
+double VOLTAGE = 3.3; // Arduino operating voltage
+int BATTERY_PIN = 3;
+
 // gas sensor================================================
 #ifdef SENSOR_GAS
 int GasSmokeAnalogPin = 0;      // potentiometer wiper (middle terminal) connected to analog pin
@@ -145,7 +154,7 @@ void sensorTempHum() {
     theData.deviceID = SENSOR_HUMIDITY;
     theData.var1_usl = millis();
     theData.var2_float = h;
-    //	theData.var3_float = h;
+    theData.var3_float = vin;
     radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
     ledFlash();
     radio.sleep();
@@ -181,6 +190,9 @@ void setup()
   ledFlash();
   theData.nodeID = NODEID;  //this node id should be the same for all devices in this node
 
+  // battery monitor
+  pinMode(BATTERY_PIN, INPUT);
+
   //temperature / humidity sensor
 #ifdef SENSOR_TEMP_HUM
   dht.begin();
@@ -213,10 +225,16 @@ void loop()
 
   unsigned long time_passed = 0;
 
-  // TODO
   // calculate battery status
   // and reuse it for all devices
-  
+  // read the value at analog input
+  int value = analogRead(BATTERY_PIN);
+  vout = (value * VOLTAGE) / 1024.0;
+  vin = vout / (R2/(R1+R2)); 
+  if (vin < 0.09) {
+    vin = 0.0;//statement to quash undesired reading !
+  }
+
   // TODO
   // extract modules for each device
 
