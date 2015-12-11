@@ -20,9 +20,9 @@ to gateway.  See OpenHAB configuration file.
 typedef struct {
   int       nodeID; 		//node ID (1xx, 2xx, 3xx);  1xx = basement, 2xx = main floor, 3xx = outside
   int       deviceID;		//sensor ID (2, 3, 4, 5)
-  unsigned long   var1_usl; 		//uptime in ms
-  float     var2_float;   	//sensor data?
-  float     var3_float;		//battery condition?
+  unsigned long   uptime_ms; 		//uptime in ms
+  float     sensordata;   	//sensor data?
+  float     battery_volts;		//battery condition?
 } Payload;
 Payload theData;
 
@@ -146,15 +146,15 @@ void sensorTempHum() {
 
     //send data
     theData.deviceID = SENSOR_TEMP_HUM;
-    theData.var1_usl = millis();
-    theData.var2_float = t;
-    //	theData.var3_float = h;
+    theData.uptime_ms = millis();
+    theData.sensordata = t;
+    //	theData.battery_volts = h;
     radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
     ledFlash();
     theData.deviceID = SENSOR_HUMIDITY;
-    theData.var1_usl = millis();
-    theData.var2_float = h;
-    theData.var3_float = vin;
+    theData.uptime_ms = millis();
+    theData.sensordata = h;
+    theData.battery_volts = vin;
     radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
     ledFlash();
     radio.sleep();
@@ -270,9 +270,9 @@ void loop()
       gas_time_send = millis();  //update gas_time_send with when sensor value last transmitted
 
       theData.deviceID = SENSOR_GAS;
-      theData.var1_usl = millis();
-      theData.var2_float = gas_sensor;
-      theData.var3_float = gas_sensor + 100;		//null value;
+      theData.uptime_ms = millis();
+      theData.sensordata = gas_sensor;
+      theData.battery_volts = gas_sensor + 100;		//null value;
       radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
 	  radio.sleep();
       gas_sensor_previous = gas_sensor;
@@ -309,9 +309,9 @@ void loop()
     {
       flame_time_send = millis();  //update gas_time_send with when sensor value last transmitted
       theData.deviceID = SENSOR_FLAME;
-      theData.var1_usl = millis();
-      theData.var2_float = flameValue;
-      theData.var3_float = flameValue + 100;
+      theData.uptime_ms = millis();
+      theData.sensordata = flameValue;
+      theData.battery_volts = flameValue + 100;
       radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
 	  radio.sleep();
       flameValue_previous = flameValue;
@@ -359,9 +359,9 @@ void loop()
   {
     pir_time = millis();  //update gas_time_send with when sensor value last transmitted
     theData.deviceID = SENSOR_PIR;
-    theData.var1_usl = millis();
-    theData.var2_float = 1111;
-    theData.var3_float = 1112;		//null value;
+    theData.uptime_ms = millis();
+    theData.sensordata = 1111;
+    theData.battery_volts = 1112;		//null value;
     radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
 	radio.sleep();
     Serial.println("PIR detectedEDED RFM");
@@ -387,9 +387,9 @@ void loop()
     sound_time = millis();  //update gas_time_send with when sensor value last transmitted
 
     theData.deviceID = SENSOR_SOUND;
-    theData.var1_usl = millis();
-    theData.var2_float = 2222;
-    theData.var3_float = 2223;		//null value;
+    theData.uptime_ms = millis();
+    theData.sensordata = 2222;
+    theData.battery_volts = 2223;		//null value;
     radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
 	radio.sleep();
     Serial.print("sound noise detected RFM ");
@@ -464,9 +464,9 @@ void loop()
     {
       light_time_send = millis();  //update gas_time_send with when sensor value last transmitted
       theData.deviceID = SENSOR_LIGHT;
-      theData.var1_usl = millis();
-      theData.var2_float = lightValue;
-      theData.var3_float = lightValue + 20;
+      theData.uptime_ms = millis();
+      theData.sensordata = lightValue;
+      theData.battery_volts = lightValue + 20;
       radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
 	  radio.sleep();
       lightValue_previous = lightValue;
