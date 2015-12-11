@@ -61,8 +61,8 @@ unsigned int temperature_skipped_turns;
 
 // battery monitor
 // TODO extract constants and move to config
-float vout = 0.0;
-float vin = 0.0;
+//float vout = 0.0;
+//float vin = 0.0;
 float R1 = 1000000.0; // resistance of R1 (1M)
 float R2 = 1000000.0; // resistance of R2 (1M)
 double VOLTAGE = 3.3; // Arduino operating voltage
@@ -141,20 +141,21 @@ void sensorTempHum() {
     Serial.print("   Temp=");
     Serial.println(t);
 
-
     temperature_time = millis();
-
+    
+    float voltage = batteryVoltage();
+    
     //send data
     theData.deviceID = SENSOR_TEMP_HUM;
     theData.uptime_ms = millis();
     theData.sensordata = t;
-    //	theData.battery_volts = h;
+    theData.battery_volts = voltage;
     radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
     ledFlash();
     theData.deviceID = SENSOR_HUMIDITY;
     theData.uptime_ms = millis();
     theData.sensordata = h;
-    theData.battery_volts = vin;
+    theData.battery_volts = voltage;
     radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
     ledFlash();
     radio.sleep();
@@ -162,7 +163,9 @@ void sensorTempHum() {
 
 #endif
 
-
+//
+// Flashes the LED
+//
 void ledFlash()
 {
   digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
@@ -170,6 +173,21 @@ void ledFlash()
   digitalWrite(LED, LOW);
 }
 
+//
+// Reads and calculates current battery voltage
+// Returns: Current voltage in Volts.
+//
+float batteryVoltage()
+{
+  // read the value at analog input
+  int value = analogRead(BATTERY_PIN);
+  float vout = (value * VOLTAGE) / 1024.0;
+  float vin = vout / (R2/(R1+R2)); 
+  if (vin < 0.09) {
+    vin = 0.0;//statement to quash undesired reading !
+  }
+  return vin;
+}
 
 void setup()
 {
@@ -224,16 +242,6 @@ void loop()
 {
 
   unsigned long time_passed = 0;
-
-  // calculate battery status
-  // and reuse it for all devices
-  // read the value at analog input
-  int value = analogRead(BATTERY_PIN);
-  vout = (value * VOLTAGE) / 1024.0;
-  vin = vout / (R2/(R1+R2)); 
-  if (vin < 0.09) {
-    vin = 0.0;//statement to quash undesired reading !
-  }
 
   // TODO
   // extract modules for each device
