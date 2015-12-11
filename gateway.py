@@ -169,5 +169,5 @@ if __name__ == "__main__":
             continue
         packet = bytearray(gw.radio.DATA)
         if gw.radio.ACKRequested():
-            gw.radio.sendACK()
+            gw.radio.sendACK(gw.radio.SENDERID)
         gw.processPacket(packet)
