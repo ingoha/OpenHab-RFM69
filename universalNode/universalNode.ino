@@ -61,8 +61,6 @@ unsigned int temperature_skipped_turns;
 
 // battery monitor
 // TODO extract constants and move to config
-//float vout = 0.0;
-//float vin = 0.0;
 float R1 = 1000000.0; // resistance of R1 (1M)
 float R2 = 1000000.0; // resistance of R2 (1M)
 double VOLTAGE = 3.3; // Arduino operating voltage
@@ -146,18 +144,23 @@ void sensorTempHum() {
     float voltage = batteryVoltage();
     
     //send data
-    theData.deviceID = SENSOR_TEMP_HUM;
-    theData.uptime_ms = millis();
-    theData.sensordata = t;
-    theData.battery_volts = voltage;
-    radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    Payload msg;
+    msg.deviceID = SENSOR_TEMP_HUM;
+    msg.uptime_ms = millis();
+    msg.sensordata = t;
+    msg.battery_volts = voltage;
+    radio.send(GATEWAYID, (const void*)(&msg), sizeof(msg));
+    
     ledFlash();
-    theData.deviceID = SENSOR_HUMIDITY;
-    theData.uptime_ms = millis();
-    theData.sensordata = h;
-    theData.battery_volts = voltage;
-    radio.send(GATEWAYID, (const void*)(&theData), sizeof(theData));
+    
+    msg.deviceID = SENSOR_HUMIDITY;
+    msg.uptime_ms = millis();
+    msg.sensordata = h;
+    msg.battery_volts = voltage;
+    radio.send(GATEWAYID, (const void*)(&msg), sizeof(msg));
+    
     ledFlash();
+    
     radio.sleep();
 }
 
