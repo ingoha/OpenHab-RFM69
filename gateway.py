@@ -128,8 +128,10 @@ class Gateway(object):
 		# send uptime
 		self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/uptime" % (message.nodeID, message.sensorID), message.uptime)
 		# send battery state
-		self.mqttc.publish("home/rfm_gw/nb/node%02d/dev%02d/battery" % (message.nodeID, message.sensorID), message.battery)
-    
+		self.mqttc.publish("home/rfm_gw/nb/node%02d/battery" % (message.nodeID), message.battery)
+		# send rssi
+		self.mqttc.publish("home/rfm_gw/nb/node%02d/rssi" % (message.nodeID), gw.radio.RSSI)
+
     def sendMessage(self, message):
         if not self.radio.sendWithRetry(message.nodeID, message.message, 5, 30):
             self.mqttc.publish("home/rfm_gw/nb/node%02d/dev90" % (message.nodeID, ), 
