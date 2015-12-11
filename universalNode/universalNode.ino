@@ -24,11 +24,7 @@ typedef struct {
     float     sensordata;   	//sensor data?
     float     battery_volts;		//battery condition?
 } Payload;
-Payload theData;
 
-char buff[20];
-byte sendSize = 0;
-boolean requestACK = false;
 /*
  * RFM69 Pinout to arduino:
  *   MOSI = 11
@@ -36,9 +32,6 @@ boolean requestACK = false;
  *   SCK = 13
  *   SS = 10
  */
-
-
-
 RFM69 radio;
 
 // timings
@@ -130,14 +123,12 @@ void sensorTempHum() {
 
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t)) {
-        debugPrint("Failed to read from DHT sensor!");
+        debugPrintln("Failed to read from DHT sensor!");
         return;
     }
 
-    debugPrint("Humidity=");
-    debugPrint(h);
-    debugPrint("   Temp=");
-    debugPrint(t);
+    debugPrintf("Humidity=", h);
+    debugPrintf("   Temp=", t);
 
     temperature_time = millis();
 
@@ -278,7 +269,7 @@ void sensorPir()
         msg.battery_volts = batteryVoltage();		//null value;
         radio.sendWithRetry(GATEWAYID, (const void*)(&msg), sizeof(msg));
         radio.sleep();
-        debugPrint("PIR detectedEDED RFM");
+        debugPrintln("PIR detectedEDED RFM");
         delay(2000);
     }
 }
@@ -307,7 +298,7 @@ void sensorSound()
         msg.deviceID = SENSOR_SOUND;
         msg.uptime_ms = millis();
         msg.sensordata = 2222;
-        msg.battery_volts = batteryVoltage();		//null value;
+        msg.battery_volts = batteryVoltage();
         radio.sendWithRetry(GATEWAYID, (const void*)(&msg), sizeof(msg));
         radio.sleep();
         debugPrint("sound noise detected RFM ");
@@ -316,10 +307,51 @@ void sensorSound()
 }
 #endif
 
+#ifdef SENSOR_LIGHT
+//===================================================================
+//device #8
+//light
+void sensorLight()
+{
+    time_passed = millis() - light_time;
+    if (time_passed < 0)
+    {
+        light_time = millis();
+        light_time_send = -70000;
+    }
+    if (time_passed > 2000)  //how often to examine the sensor analog value
+    {
+        light_time = millis();		//update time when sensor value last read
+        lightValue = 0;
+
+        //analog value:  Less than 100 is dark.  greater than 500 is room lighting
+        lightValue = analogRead(lightAnalogInput);
+        if ((lightValue < (lightValue_previous - 50)) || ((lightValue > (lightValue_previous + 100)) || (705000 < (millis() - light_time_send))) )
+        {
+            light_time_send = millis();  //update gas_time_send with when sensor value last transmitted
+            Payload msg;
+            msg.nodeID = NODEID;
+            msg.deviceID = SENSOR_LIGHT;
+            msg.uptime_ms = millis();
+            msg.sensordata = lightValue;
+            msg.battery_volts = batteryVoltage();
+            radio.sendWithRetry(GATEWAYID, (const void*)(&msg), sizeof(msg));
+            radio.sleep();
+            lightValue_previous = lightValue;
+            debugPrintf("light RFM =", lightValue);
+        }
+
+        debugPrintf("light analog = ", lightValue);
+
+    }// end if millis time_passed >
+}
+#endif
+
+
 //
 // Print to serial in debug mode only
 //
-void debugPrint(char* s)
+void debugPrintln(char* s)
 {
     if (debug)
     {
@@ -327,6 +359,15 @@ void debugPrint(char* s)
     }
 }
 
+void debugPrintf(char* s, double x)
+{
+    if (debug)
+    {
+        char buff[256];
+        sprintf(buff, s, x);
+        Serial.println(buff);
+    }
+}
 //
 // Flashes the LED
 //
@@ -382,7 +423,7 @@ void setup()
     //temperature / humidity sensor
 #ifdef SENSOR_TEMP_HUM
     dht.begin();
-    debugPrint("DHT sensor enabled.");
+    debugPrintln("DHT sensor enabled.");
     ledFlash();
     // send initial reading
     sensorTempHum();
@@ -408,20 +449,8 @@ void setup()
 
 void loop()
 {
-
-    unsigned long time_passed = 0;
-
-    // TODO
-    // extract modules for each device
-
-
-    //===================================================================
-
-    //delay(100);
-
-
 #ifdef SENSOR_TEMP_HUM
-    debugPrint("Turns skipped: " + temperature_skipped_turns);
+    debugPrintf("Turns skipped: ", temperature_skipped_turns);
     if(temperature_skipped_turns >= TEMPERATURE_TURNS)
     {
         temperature_skipped_turns = 0;
@@ -432,44 +461,8 @@ void loop()
         temperature_skipped_turns += 1;
     }
 #endif
-    //===================================================================
-    //===================================================================
-    //device #8
-    //light
-#ifdef SENSOR_LIGHT
-    time_passed = millis() - light_time;
-    if (time_passed < 0)
-    {
-        light_time = millis();
-        light_time_send = -70000;
-    }
-    if (time_passed > 2000)  //how often to examine the sensor analog value
-    {
-        light_time = millis();		//update time when sensor value last read
-        lightValue = 0;
 
-        //analog value:  Less than 100 is dark.  greater than 500 is room lighting
-        lightValue = analogRead(lightAnalogInput);
-        if ((lightValue < (lightValue_previous - 50)) || ((lightValue > (lightValue_previous + 100)) || (705000 < (millis() - light_time_send))) )
-        {
-            light_time_send = millis();  //update gas_time_send with when sensor value last transmitted
-            theData.deviceID = SENSOR_LIGHT;
-            theData.uptime_ms = millis();
-            theData.sensordata = lightValue;
-            theData.battery_volts = lightValue + 20;
-            radio.sendWithRetry(GATEWAYID, (const void*)(&theData), sizeof(theData));
-            radio.sleep();
-            lightValue_previous = lightValue;
-            debugPrint("light RFM =");
-            debugPrint(lightValue);
-        }
-
-        debugPrint("light analog = ");
-        debugPrint(lightValue);
-
-    }// end if millis time_passed >
-#endif
-// Enter power down state for 8 s with ADC and BOD module disabled
+    // Enter power down state for 8 s with ADC and BOD module disabled
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
 }//end loop
 
