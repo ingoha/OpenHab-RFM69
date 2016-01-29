@@ -363,7 +363,7 @@ void sensorLight()
 //
 // Print to serial in debug mode only
 //
-void debugPrintln(char* s)
+void debugPrintln(const char* s)
 {
     if (debug)
     {
@@ -371,7 +371,7 @@ void debugPrintln(char* s)
     }
 }
 
-void debugPrintf(char* s, double x)
+void debugPrintf(const char* s, double x)
 {
     if (debug)
     {
