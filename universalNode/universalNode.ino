@@ -155,7 +155,7 @@ void sensorTempHum() {
     msg.battery_volts = voltage;
     radio.send(GATEWAYID, (const void*)(&msg), sizeof(msg));
 
-    ledFlash();
+    blinkNTimes(1);
 
     msg.deviceID = SENSOR_HUMIDITY;
     msg.uptime_ms = millis();
@@ -163,7 +163,7 @@ void sensorTempHum() {
     msg.battery_volts = voltage;
     radio.send(GATEWAYID, (const void*)(&msg), sizeof(msg));
 
-    ledFlash();
+    blinkNTimes(1);
 
     radio.sleep();
 }
@@ -380,15 +380,6 @@ void debugPrintf(char* s, double x)
         Serial.println(buff);
     }
 }
-//
-// Flashes the LED
-//
-void ledFlash()
-{
-    digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(1000);              // wait for a second
-    digitalWrite(LED, LOW);
-}
 
 //
 // Reads and calculates current battery voltage
@@ -413,7 +404,13 @@ void setup()
 
     pinMode(LED, OUTPUT);
 
-    radio.initialize(FREQUENCY, NODEID, NETWORKID);
+    if (!radio.initialize(FREQUENCY, NODEID, NETWORKID))
+    {
+      while(true)
+      {
+        blinkNTimes(3);
+      }
+    }
 #ifdef IS_RFM69HW
     radio.setHighPower(); //uncomment only for RFM69HW!
 #endif
@@ -427,8 +424,8 @@ void setup()
         sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
         Serial.println(buff);
     }
-//    ledFlash();
-digitalWrite(LED, HIGH);
+    blinkNTimes(1);
+    delay(900);
 
     // battery monitor
     pinMode(BATTERY_PIN, INPUT);
@@ -437,7 +434,8 @@ digitalWrite(LED, HIGH);
 #ifdef SENSOR_TEMP_HUM
     dht.begin();
     debugPrintln("DHT sensor enabled.");
-    ledFlash();
+    blinkNTimes(2);
+    delay(900);
     // send initial reading
     sensorTempHum();
 #endif
