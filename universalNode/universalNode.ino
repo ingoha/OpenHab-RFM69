@@ -113,6 +113,18 @@ DHT dht(DHTPIN, DHTTYPE, 2);
 // Example to initialize DHT sensor for Arduino Due:
 //DHT dht(DHTPIN, DHTTYPE, 30);
 
+// Blinks the led n times
+void blinkNTimes(int n)
+{
+  for(int i = 0; i < n; i += 1)
+  {
+    digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(100);              // wait for 1/10 second
+    digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
+    delay(100);             // wait for 1/10 second
+  }
+}
+
 //
 // Handles DHT sensor
 //
@@ -415,7 +427,8 @@ void setup()
         sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
         Serial.println(buff);
     }
-    ledFlash();
+//    ledFlash();
+digitalWrite(LED, HIGH);
 
     // battery monitor
     pinMode(BATTERY_PIN, INPUT);
