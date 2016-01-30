@@ -113,7 +113,7 @@ DHT dht(DHTPIN, DHTTYPE, 2);
 // Example to initialize DHT sensor for Arduino Due:
 //DHT dht(DHTPIN, DHTTYPE, 30);
 
-// Blinks the led n times
+// Blinks the led n times and waits 900ms
 void blinkNTimes(int n)
 {
   for(int i = 0; i < n; i += 1)
@@ -123,6 +123,7 @@ void blinkNTimes(int n)
     digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
     delay(100);             // wait for 1/10 second
   }
+  delay(900);
 }
 
 //
@@ -404,11 +405,14 @@ void setup()
 
     pinMode(LED, OUTPUT);
 
+    // first signal: started :-)
+    blinkNTimes(1);
+
     if (!radio.initialize(FREQUENCY, NODEID, NETWORKID))
     {
       while(true)
       {
-        blinkNTimes(3);
+        blinkNTimes(5);
       }
     }
 #ifdef IS_RFM69HW
@@ -424,8 +428,8 @@ void setup()
         sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
         Serial.println(buff);
     }
-    blinkNTimes(1);
-    delay(900);
+    // second signal: radion initialized
+    blinkNTimes(2);
 
     // battery monitor
     pinMode(BATTERY_PIN, INPUT);
@@ -434,8 +438,8 @@ void setup()
 #ifdef SENSOR_TEMP_HUM
     dht.begin();
     debugPrintln("DHT sensor enabled.");
-    blinkNTimes(2);
-    delay(900);
+    // third signal: DHT initialized
+    blinkNTimes(3);
     // send initial reading
     sensorTempHum();
 #endif
