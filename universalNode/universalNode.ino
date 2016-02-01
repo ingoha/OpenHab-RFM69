@@ -12,8 +12,8 @@ to gateway.  See OpenHAB configuration file.
 
 #include "config.h"
 
-#include <LowPower.h>
-#include <RFM69.h>
+#include <LowPower.h> // from https://github.com/LowPowerLab/LowPower
+#include <RFM69.h>  // from https://github.com/ingoha/RFM69-Arduino
 #include <SPI.h>
 
 //struct for wireless data transmission
