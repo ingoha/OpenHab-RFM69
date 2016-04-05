@@ -56,6 +56,7 @@ unsigned int temperature_skipped_turns;
 // TODO extract constants and move to config
 float R1 = 1000000.0; // resistance of R1 (1M)
 float R2 = 1000000.0; // resistance of R2 (1M)
+float R1R2 = R1 / (R1 + R2); // proportion of voltage divider
 double VOLTAGE = 3.3; // Arduino operating voltage
 int BATTERY_PIN = 3;
 
@@ -391,7 +392,7 @@ float batteryVoltage()
     // read the value at analog input
     int value = analogRead(BATTERY_PIN);
     float vout = (value * VOLTAGE) / 1024.0;
-    float vin = vout / (R2/(R1+R2));
+    float vin = vout / R1R2;
     if (vin < 0.09) {
         vin = 0.0;//statement to quash undesired reading !
     }
