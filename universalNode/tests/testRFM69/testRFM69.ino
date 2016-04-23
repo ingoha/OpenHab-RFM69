@@ -6,7 +6,7 @@
    ATmega
    LED
    RFM69
-  Expected result: LED blinks twice (slowly)
+  Expected result: LED blinks three times (slowly) and a message is sent to the gateway
   Possible error states: LED blinks once and the blinks faster: failed to init RFM
 */
 
