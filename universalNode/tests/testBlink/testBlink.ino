@@ -1,16 +1,12 @@
 /*
-Original Author: Eric Tsai
-Updated by Ingo Haschler
-License: CC-BY-SA, https://creativecommons.org/licenses/by-sa/2.0/
-Date: 9-1-2014
-Original File: UberSensor.ino
-This sketch is for a wired Arduino w/ RFM69 wireless transceiver
-Sends sensor data (gas/smoke, flame, PIR, noise, temp/humidity) back
-to gateway.  See OpenHAB configuration file.
+Author: Ingo Haschler
+Test program for breadboard arduino
+Components covered:
+ * voltage regulator
+ * ATmega
+ * LED
+Expected result: LED blinks 
 */
-
-
-#include <SPI.h>
 
 //
 // Arduino
