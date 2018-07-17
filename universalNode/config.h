@@ -1,5 +1,5 @@
 //
-// Configuration section 
+// Configuration section
 // 1) Update encryption string "ENCRYPTKEY" and network id, node id and frequency
 // 2) pick sensors to enable
 //
@@ -14,7 +14,7 @@
 //#define SENSOR_FLAME 3
 //#define SENSOR_PIR 4
 //#define SENSOR_SOUND 5
-//#define SENSOR_TEMP_HUM 6
+#define SENSOR_TEMP_HUM 6
 #ifdef SENSOR_TEMP_HUM
   #define SENSOR_HUMIDITY 7
 #endif
@@ -45,7 +45,6 @@
 
 //temperature / humidity  =====================================
 #ifdef SENSOR_TEMP_HUM
-
 #define DHTPIN 7     			// digital pin we're connected to
 
 // Uncomment whatever type you're using!
@@ -69,8 +68,11 @@
 /*
  * General
  */
-bool debug = 0;
- 
+bool debug = false;
+
 /*
  * End configuration section
  */
+
+// include local config (put confidential information here...)
+#include config.h.local
