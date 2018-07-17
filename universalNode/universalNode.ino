@@ -7,13 +7,15 @@ Original File: UberSensor.ino
 This sketch is for a wired Arduino w/ RFM69 wireless transceiver
 Sends sensor data (gas/smoke, flame, PIR, noise, temp/humidity) back
 to gateway.  See OpenHAB configuration file.
+
+Blink codes on startup: 1+2+3: everything OK, continous blinking: failed to init RFM module
 */
 
 
 #include "config.h"
 
 #include <LowPower.h> // from https://github.com/LowPowerLab/LowPower
-#include <RFM69.h>  // from https://github.com/ingoha/RFM69-Arduino
+#include <RFM69.h>  // from https://github.com/LowPowerLab/RFM69
 #include <SPI.h>
 
 //struct for wireless data transmission
@@ -348,17 +350,16 @@ void sensorLight()
 }
 #endif
 
-// Blinks the led n times and waits 900ms
+// Blinks the led n times (freqency 1s)
 void blinkNTimes(int n)
 {
   for(int i = 0; i < n; i += 1)
   {
-    digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(100);              // wait for 1/10 second
-    digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
-    delay(100);             // wait for 1/10 second
+    digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(1000);              // wait for 1/10 second
+    digitalWrite(LED, LOW);    // turn the LED off by making the voltage LOW
+    delay(1000);             // wait for 1/10 second
   }
-  delay(900);
 }
 
 
@@ -401,13 +402,13 @@ float batteryVoltage()
 
 void setup()
 {
-    if (debug)
-        Serial.begin(SERIAL_BAUD);          //  setup serial
-
     pinMode(LED, OUTPUT);
 
     // first signal: started :-)
     blinkNTimes(1);
+
+    if (debug)
+        Serial.begin(SERIAL_BAUD);          //  setup serial
 
     if (!radio.initialize(FREQUENCY, NODEID, NETWORKID))
     {
@@ -481,10 +482,3 @@ void loop()
     // Enter power down state for 8 s with ADC and BOD module disabled
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
 }//end loop
-
-
-
-
-
-
-
