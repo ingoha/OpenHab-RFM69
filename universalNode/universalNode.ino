@@ -430,7 +430,7 @@ void setup()
         sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
         Serial.println(buff);
     }
-    // second signal: radion initialized
+    // second signal: radio initialized
     blinkNTimes(2);
 
     // battery monitor
@@ -457,6 +457,8 @@ void setup()
     pir_time = millis();
     sound_time = millis();
     temperature_time = millis();
+
+    temperature_skipped_turns = 0;
 
     //PIR sensor
 #ifdef SENSOR_PIR
