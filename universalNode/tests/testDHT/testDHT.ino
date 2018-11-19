@@ -8,8 +8,9 @@
    DHT
   Expected result: LED blinks and then stays on
 */
-
-#include "DHT.h"
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 
 //
 // Arduino
@@ -27,10 +28,11 @@
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 // Initialize DHT sensor for 8mhz Arduino
-DHT dht(DHTPIN, DHTTYPE, 2);
+DHT_Unified dht(DHTPIN, DHTTYPE);
 
 void setup()
 {
+  dht.begin();
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(1000);              // wait for a second
@@ -40,12 +42,10 @@ void setup()
 
 void loop()
 {
-  float h = dht.readHumidity();
-  // Read temperature as Celsius
-  float t = dht.readTemperature();
-
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(h) || isnan(t))
+  // Get temperature event and print its value.
+  sensors_event_t event;  
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature))
   {
     digitalWrite(LED, LOW);    // turn the LED off by making the voltage LOW
   }
