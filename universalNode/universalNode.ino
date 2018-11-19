@@ -104,9 +104,11 @@ int sound_reading_previous = 0;
 #endif
 
 #ifdef SENSOR_TEMP_HUM
-#include "DHT.h"
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 // Initialize DHT sensor for 8mhz Arduino
-DHT dht(DHTPIN, DHTTYPE, 2);
+DHT_Unified dht(DHTPIN, DHTTYPE);
 // NOTE: For working with a faster chip, like an Arduino Due or Teensy, you
 // might need to increase the threshold for cycle counts considered a 1 or 0.
 // You can do this by passing a 3rd parameter for this threshold.  It's a bit
@@ -120,9 +122,13 @@ DHT dht(DHTPIN, DHTTYPE, 2);
 // Handles DHT sensor
 //
 void sensorTempHum() {
-    float h = dht.readHumidity();
+    // Get temperature event and print its value.
+    sensors_event_t event;  
+    dht.humidity().getEvent(&event);
+    float h = event.relative_humidity;
     // Read temperature as Celsius
-    float t = dht.readTemperature();
+    dht.temperature().getEvent(&event);
+    float t = event.temperature;
 
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t)) {
