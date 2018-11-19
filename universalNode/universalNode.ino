@@ -127,6 +127,7 @@ void sensorTempHum() {
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t)) {
         debugPrintln("Failed to read from DHT sensor!");
+        blinkNTimes(5);
         return;
     }
 
@@ -350,16 +351,17 @@ void sensorLight()
 }
 #endif
 
-// Blinks the led n times (freqency 1s)
+// Blinks the led n times
 void blinkNTimes(int n)
 {
   for(int i = 0; i < n; i += 1)
   {
-    digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(1000);              // wait for 1/10 second
-    digitalWrite(LED, LOW);    // turn the LED off by making the voltage LOW
-    delay(1000);             // wait for 1/10 second
+    digitalWrite(LED, HIGH);
+    delay(100);
+    digitalWrite(LED, LOW);
+    delay(300);
   }
+  delay(300);
 }
 
 
