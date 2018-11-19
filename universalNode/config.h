@@ -75,4 +75,4 @@ bool debug = false;
  */
 
 // include local config (put confidential information here...)
-#include config.h.local
+#include "config.local.h"
